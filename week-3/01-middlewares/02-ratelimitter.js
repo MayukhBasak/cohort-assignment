@@ -12,10 +12,43 @@ const app = express();
 // clears every one second
 
 let numberOfRequestsForUser = {};
-setInterval(() => {
-    numberOfRequestsForUser = {};
-}, 1000)
 
+let requests= [];
+const thresholdRequestLimit= 5;
+/* app.use((req, res, next)=>{
+  requests.push(Date.now());
+  if(requests.length> thresholdRequestLimit){
+     return res.status(404).json({
+      message: "RPS limit crossed"
+     })
+  }
+  next();
+}
+) */
+
+
+app.use((req, res, next) => {
+  const userId = req.headers['user-id'];
+
+  if (!userId) {
+    return res.status(400).json({
+      message: "User ID is required in headers"
+    });
+  }
+
+  numberOfRequestsForUser[userId] = (numberOfRequestsForUser[userId] || 0) + 1;
+
+  if (numberOfRequestsForUser[userId] > thresholdRequestLimit) {
+    return res.status(404).json({
+      message: "RPS limit crossed for user"
+    });
+  }
+
+  next();
+});
+setInterval(() => {
+  numberOfRequestsForUser = {};
+}, 1000)
 app.get('/user', function(req, res) {
   res.status(200).json({ name: 'john' });
 });

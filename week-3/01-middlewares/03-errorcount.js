@@ -14,8 +14,20 @@ app.get('/user', function(req, res) {
   throw new Error("User not found");
   res.status(200).json({ name: 'john' });
 });
-
+app.use((err, req, res, next)=>{
+  errorCount++;
+  res.status(404).json({
+    err: err.message
+  })
+  next();
+})
 app.post('/user', function(req, res) {
+  if(errorCount> 0){
+    return res.status(404).json({
+      mssg: "this is an error"
+    })
+  }
+
   res.status(200).json({ msg: 'created dummy user' });
 });
 
